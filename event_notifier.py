@@ -1,6 +1,8 @@
 import threading
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Callable
+
+import requests  # Add this import
 
 
 class EventNotifier:
@@ -8,6 +10,10 @@ class EventNotifier:
         self,
         get_next_event_func: Callable[[], dict],
         send_notification_func: Callable[[dict], None],
+        heartbeat_url: str,
+        poll_interval: int = 10 * 60,
+        alarm_offset: int = 3 * 60,
+        heartbeat_period: int = 60,
     ):
         """
         Initializes the EventNotifier with the given functions.
@@ -18,16 +24,20 @@ class EventNotifier:
         self.send_notification_func = send_notification_func
         self.next_event = None
         self.check_timer = None
-        self.poll_interval = 15  # 10 minutes in seconds
-        self.alarm_offset = 240  # 3 minutes in seconds
+        self.poll_interval = poll_interval  # in seconds
+        self.alarm_offset = alarm_offset  # in seconds
         self.notification_timer = None
         self.lock = threading.Lock()
+        self.heartbeat_url = heartbeat_url
+        self.heartbeat_timer = None
+        self.heartbeat_period = heartbeat_period
 
     def start(self):
         """
         Starts the event notifier.
         """
         self.schedule_next_check()
+        self.schedule_heartbeat()  # Add this line
 
     def schedule_next_check(self):
         """
@@ -79,6 +89,26 @@ class EventNotifier:
         print("Sending notification...")
         self.send_notification_func(self.next_event.copy())
 
+    def schedule_heartbeat(self):
+        """
+        Schedules a heartbeat signal to the URL every minute.
+        """
+        self.send_heartbeat()
+        self.heartbeat_timer = threading.Timer(
+            self.heartbeat_period, self.schedule_heartbeat
+        )
+        self.heartbeat_timer.start()
+
+    def send_heartbeat(self):
+        """
+        Pings the specified URL.
+        """
+        try:
+            requests.get(self.heartbeat_url)
+            print(f"Pinged {self.heartbeat_url}")
+        except requests.RequestException as e:
+            print(f"Failed to ping {self.heartbeat_url}: {e}")
+
     def stop(self):
         """
         Stops the event notifier.
@@ -87,6 +117,8 @@ class EventNotifier:
             self.check_timer.cancel()
         if self.notification_timer:
             self.notification_timer.cancel()
+        if self.heartbeat_timer:
+            self.heartbeat_timer.cancel()
 
 
 def main():
