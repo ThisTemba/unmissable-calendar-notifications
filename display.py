@@ -8,7 +8,7 @@ from screeninfo import get_monitors
 from colors import colors
 
 BG_COLOR = colors["Stone"][950]
-DEFAULT_HOLD_DURATION = 30  # seconds
+DEFAULT_HOLD_DURATION = 100  # seconds
 
 
 def display_event_on_all_screens(event):
