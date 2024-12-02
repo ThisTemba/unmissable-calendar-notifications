@@ -7,6 +7,8 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
+from event import CalendarEvent
+
 SCOPES = ["https://www.googleapis.com/auth/calendar.events.readonly"]
 
 
@@ -26,7 +28,7 @@ def get_credentials():
     return creds
 
 
-def get_next_event():
+def get_next_event() -> CalendarEvent:
     """Fetches the next event from the user's Google Calendar."""
     credentials = get_credentials()
     service = build("calendar", "v3", credentials=credentials)
@@ -51,7 +53,7 @@ def main():
     next_event = get_next_event()
     if next_event:
         pprint(next_event)
-        print(f"Next event: {next_event['summary']}")
+        print(f"Next event: {next_event["summary"]}")
     else:
         print("No upcoming events found.")
     return
