@@ -10,20 +10,22 @@ from googleapiclient.discovery import build
 from event import CalendarEvent
 
 SCOPES = ["https://www.googleapis.com/auth/calendar.events.readonly"]
+CREDENTIALS_PATH = "credentials.json"
+TOKEN_PATH = "token.json"
 
 
-def get_credentials():
+def get_credentials(credentials_path=CREDENTIALS_PATH, token_path=TOKEN_PATH):
     """Obtains user credentials for Google Calendar API."""
     creds = None
-    if os.path.exists("token.json"):
-        creds = Credentials.from_authorized_user_file("token.json", SCOPES)
+    if os.path.exists(token_path):
+        creds = Credentials.from_authorized_user_file(token_path, SCOPES)
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            flow = InstalledAppFlow.from_client_secrets_file("credentials.json", SCOPES)
+            flow = InstalledAppFlow.from_client_secrets_file(credentials_path, SCOPES)
             creds = flow.run_local_server(port=0)
-        with open("token.json", "w") as token:
+        with open(token_path, "w") as token:
             token.write(creds.to_json())
     return creds
 

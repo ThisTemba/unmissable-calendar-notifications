@@ -1,6 +1,6 @@
 import json
 
-from display import display_event_on_all_screens
+from notify import display_event_on_all_screens
 from event_notifier import EventNotifier
 from google_calendar import get_next_event
 
