@@ -38,15 +38,38 @@ def get_next_event() -> CalendarEvent:
         .list(
             calendarId="primary",
             timeMin=now,
-            maxResults=1,
+            maxResults=10,
             singleEvents=True,
             orderBy="startTime",
         )
         .execute()
     )
     events = events_result.get("items", [])
+    events = filter_events(events)
     next_event = events[0] if events else None
     return next_event
+
+
+def filter_events(events):
+    """
+    Keep events with start times in the future
+    * ignore all-day events
+    * ignore events that have already started and are in progress
+    """
+    now = datetime.now(timezone.utc)
+    events_new = []
+    for event in events:
+        # ignore all-day events
+        start_time_str = event["start"].get("dateTime")
+        if not start_time_str:
+            continue
+        # ignore events that have already started
+        event_start_dt = datetime.fromisoformat(start_time_str)
+        if event_start_dt < now:
+            continue
+
+        events_new.append(event)
+    return events_new
 
 
 def main():

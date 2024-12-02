@@ -1,87 +1,109 @@
-import time
 import threading
-from dateutil import parser
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+from typing import Callable
 
 
 class EventNotifier:
     def __init__(
         self,
-        get_events_func,
-        display_event_func,
-        poll_interval=600,       # 10 minutes in seconds
-        alarm_offset=180,        # 3 minutes in seconds
-        screen_hold_duration=30, # seconds
-        time_provider=datetime.now,
-        sleep_func=time.sleep,
+        get_next_event_func: Callable[[], dict],
+        send_notification_func: Callable[[dict], None],
     ):
-        self.get_events_func = get_events_func
-        self.display_event_func = display_event_func
-        self.poll_interval = poll_interval
-        self.alarm_offset = alarm_offset
-        self.screen_hold_duration = screen_hold_duration
-        self.time_provider = time_provider
-        self.sleep_func = sleep_func
-        self.next_event_start_dt_stored = None
-        self.alarm_set = False
-        self.running = True
+        """
+        Initializes the EventNotifier with the given functions.
+        :param get_next_event_function: Function that returns the next event as a dictionary.
+        :param send_notification_function: Function that sends a notification for an event.
+        """
+        self.get_next_event_func = get_next_event_func
+        self.send_notification_func = send_notification_func
+        self.next_event = None
+        self.check_timer = None
+        self.poll_interval = 15  # 10 minutes in seconds
+        self.alarm_offset = 240  # 3 minutes in seconds
+        self.notification_timer = None
+        self.lock = threading.Lock()
 
     def start(self):
-        """Starts the event notifier."""
-        while self.running:
-            now = self.time_provider(timezone.utc)
-            events = self.get_events_func(max_results=1)
-            if not events:
-                print("No upcoming events found.")
-                self.alarm_set = False
-                self.next_event_start_dt_stored = None
-                self.sleep_func(self.poll_interval)
-                continue
+        """
+        Starts the event notifier.
+        """
+        self.schedule_next_check()
 
-            next_event = events[0]
-            event_start_time = next_event.get('start', {}).get('dateTime')
-            if not event_start_time:
-                # Skip events without a specific start time
-                self.sleep_func(self.poll_interval)
-                continue
+    def schedule_next_check(self):
+        """
+        Schedules the next check for the next event.
+        """
+        self.check_next_event()
+        print(f"Next check scheduled in {self.poll_interval} seconds.")
+        self.check_timer = threading.Timer(self.poll_interval, self.schedule_next_check)
+        self.check_timer.start()
 
-            event_start_dt = parser.parse(event_start_time)
+    def check_next_event(self):
+        """
+        Checks for the next event and schedules a notification.
+        """
+        print("Checking for next event...")
+        with self.lock:
+            self.next_event = self.get_next_event_func()
+            self.schedule_notification()
 
-            if self.next_event_start_dt_stored != event_start_dt:
-                # New event detected
-                self.next_event_start_dt_stored = event_start_dt
-                self.alarm_set = False
-
-            time_until_event = (event_start_dt - now).total_seconds()
-            time_until_alarm = time_until_event - self.alarm_offset
-
-            if not self.alarm_set and time_until_alarm <= 0:
-                # It's time to check and notify
-                self.check_and_notify_event()
-                self.alarm_set = True
-                self.next_event_start_dt_stored = None
-            else:
-                # Sleep for a short interval to check again soon
-                sleep_duration = min(self.poll_interval, max(1, time_until_alarm))
-                self.sleep_func(sleep_duration)
-
-    def check_and_notify_event(self):
-        """Checks if the next event is still on the calendar and displays a notification."""
-        events = self.get_events_func(max_results=1)
-        if not events:
-            print("No upcoming events found.")
+    def schedule_notification(self):
+        """
+        Schedules a notification 3 minutes before the event starts.
+        """
+        no_start_time = "dateTime" not in self.next_event["start"]
+        if no_start_time:
+            print("Skipping all-day event.")
             return
 
-        next_event = events[0]
-        event_start_time = next_event.get('start', {}).get('dateTime')
-        if event_start_time != self.next_event_start_dt_stored.isoformat():
-            # Event has changed or been removed
-            return
+        start_time_str = self.next_event["start"]["dateTime"]
+        event_start_dt = datetime.fromisoformat(start_time_str)
+        notify_dt = event_start_dt - timedelta(seconds=self.alarm_offset)
+        now_dt = datetime.now(timezone.utc)
+        delay = (notify_dt - now_dt).total_seconds()
 
-        # Re-check if the event is still there
-        self.display_event_func(next_event, hold_duration=self.screen_hold_duration)
+        # TODO: potential bug is current event blocking next event,
+        # should ignore events that are in progress
+
+        if delay > 0:
+            print(f"Notification scheduled in {round(delay)} seconds.")
+            if self.notification_timer:
+                self.notification_timer.cancel()
+            self.notification_timer = threading.Timer(delay, self.send_notification)
+            self.notification_timer.start()
+
+    def send_notification(self):
+        """
+        Sends a notification for the next event.
+        """
+        print("Sending notification...")
+        self.send_notification_func(self.next_event.copy())
 
     def stop(self):
-        """Stops the event notifier."""
-        self.running = False
+        """
+        Stops the event notifier.
+        """
+        if self.check_timer:
+            self.check_timer.cancel()
+        if self.notification_timer:
+            self.notification_timer.cancel()
 
+
+def main():
+    def get_next_event():
+        # Your implementation to fetch the next event
+        pass
+
+    def send_notification(event):
+        # Your implementation to send a notification
+        pass
+
+    notifier = EventNotifier(get_next_event, send_notification)
+    timestr = notifier.get_start_dt(
+        {"dateTime": "2024-12-02T13:30:00-05:00", "timeZone": "America/New_York"}
+    )
+    print(timestr)
+
+
+if __name__ == "__main__":
+    main()

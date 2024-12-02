@@ -2,7 +2,7 @@ from typing import TypedDict, Optional
 
 
 class EventDateTime(TypedDict):
-    dateTime: str
+    dateTime: str  # ISO 8601
     timeZone: Optional[str]
 
 
