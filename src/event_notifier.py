@@ -11,9 +11,9 @@ class EventNotifier:
         get_next_event_func: Callable[[], dict],
         send_notification_func: Callable[[dict], None],
         heartbeat_url: str,
-        poll_interval: int = 10 * 60,
+        poll_interval: int = 15 * 60,
         alarm_offset: int = 3 * 60,
-        heartbeat_period: int = 60,
+        heartbeat_period: int = 5 * 60,
     ):
         """
         Initializes the EventNotifier with the given functions.
