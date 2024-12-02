@@ -1,4 +1,5 @@
 .venv
 credentials.json
 token.json
+heartbeat.json
 __pycache__
