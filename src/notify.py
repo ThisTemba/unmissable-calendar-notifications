@@ -1,6 +1,7 @@
 import datetime
 import threading
 import tkinter as tk
+import winsound  # Add this import
 
 import pytz
 from screeninfo import get_monitors
@@ -158,6 +159,13 @@ def display_event_on_all_screens(event):
         ThreadWithException(target=create_window, args=(monitor,))
         for monitor in monitors
     ]
+
+    sound_thread = ThreadWithException(
+        target=winsound.PlaySound, args=("SystemExit", winsound.SND_ALIAS)
+    )
+
+    threads.append(sound_thread)
+
     for t in threads:
         t.start()
     for t in threads:
