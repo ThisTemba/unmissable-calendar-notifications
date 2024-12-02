@@ -1,4 +1,5 @@
 import json
+import time  # Add this import
 
 from notify import display_event_on_all_screens
 from event_notifier import EventNotifier
@@ -17,6 +18,8 @@ def main():
     )
     try:
         notifier.start()
+        while True:
+            time.sleep(1)  # Keeps the main thread running
     except KeyboardInterrupt:
         notifier.stop()
 
