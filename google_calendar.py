@@ -1,5 +1,6 @@
-import datetime
 import os.path
+from datetime import datetime, timezone
+from pprint import pprint
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -7,7 +8,6 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
 SCOPES = ["https://www.googleapis.com/auth/calendar.events.readonly"]
-
 
 
 def get_credentials():
@@ -25,20 +25,37 @@ def get_credentials():
             token.write(creds.to_json())
     return creds
 
-def get_service():
-    return 
 
-
-def get_upcoming_events(max_results=10):
+def get_next_event():
+    """Fetches the next event from the user's Google Calendar."""
     credentials = get_credentials()
     service = build("calendar", "v3", credentials=credentials)
-    """Fetches upcoming events from Google Calendar."""
-    now = datetime.datetime.utcnow().isoformat() + "Z"
-    events_result = service.events().list(
-        calendarId="primary",
-        timeMin=now,
-        maxResults=max_results,
-        singleEvents=True,
-        orderBy="startTime",
-    ).execute()
-    return events_result.get("items", [])
+    now = datetime.now(timezone.utc).isoformat()
+    events_result = (
+        service.events()
+        .list(
+            calendarId="primary",
+            timeMin=now,
+            maxResults=1,
+            singleEvents=True,
+            orderBy="startTime",
+        )
+        .execute()
+    )
+    events = events_result.get("items", [])
+    next_event = events[0] if events else None
+    return next_event
+
+
+def main():
+    next_event = get_next_event()
+    if next_event:
+        pprint(next_event)
+        print(f"Next event: {next_event['summary']}")
+    else:
+        print("No upcoming events found.")
+    return
+
+
+if __name__ == "__main__":
+    main()
