@@ -53,7 +53,7 @@ def main():
     next_event = get_next_event()
     if next_event:
         pprint(next_event)
-        print(f"Next event: {next_event["summary"]}")
+        print(f"Next event: {next_event['summary']}")
     else:
         print("No upcoming events found.")
     return
