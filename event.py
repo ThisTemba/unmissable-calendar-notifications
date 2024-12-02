@@ -6,6 +6,10 @@ class EventDateTime(TypedDict):
     timeZone: Optional[str]
 
 
+class EventDate(TypedDict):
+    date: str
+
+
 class CreatorOrganizer(TypedDict):
     email: str
     self: Optional[bool]
@@ -18,7 +22,7 @@ class Reminders(TypedDict):
 class CalendarEvent(TypedDict):
     created: str
     creator: CreatorOrganizer
-    end: EventDateTime
+    end: EventDateTime | EventDate
     etag: str
     eventType: str
     htmlLink: str
@@ -28,7 +32,7 @@ class CalendarEvent(TypedDict):
     organizer: CreatorOrganizer
     reminders: Reminders
     sequence: int
-    start: EventDateTime
+    start: EventDateTime | EventDate
     status: str
     summary: str
     updated: str
