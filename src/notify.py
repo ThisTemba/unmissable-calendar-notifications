@@ -10,7 +10,11 @@ from colors import colors
 from logger import logger
 
 BG_COLOR = colors["Stone"][950]
-DEFAULT_HOLD_DURATION = 100  # seconds
+DEFAULT_HOLD_DURATION = (
+    200  # seconds (longer is better, good that it is dismissed by you)
+)
+TEXT_COLOR_PRIMARY = colors["Orange"][400]
+TEXT_COLOR_SECONDARY = colors["Gray"][200]
 
 
 def display_event_on_all_screens(event):
@@ -45,77 +49,38 @@ def display_event_on_all_screens(event):
             frame.pack(expand=True)
             logger.debug(f"UI frame packed for monitor: {monitor}")
 
+            font_size1 = 100 if monitor.width > 1920 else 60
+            font_size2 = 40 if monitor.width > 1920 else 25
+
+            intro_label = tk.Label(
+                frame,
+                text="You have an upcoming calendar event:",  # Will be updated in real-time
+                font=("Arial", int(font_size2 * 2 / 3)),
+                fg=TEXT_COLOR_SECONDARY,
+                bg=BG_COLOR,
+            )
+            intro_label.pack(pady=20)
+
             title_label = tk.Label(
                 frame,
-                text="Upcoming Event!",
-                font=("Arial", 80, "bold"),
-                fg=colors["Amber"][400],
+                text=event_summary,
+                font=("Arial", font_size1, "bold"),
+                fg=TEXT_COLOR_PRIMARY,
                 bg=BG_COLOR,
             )
             title_label.pack(pady=20)
 
-            summary_label = tk.Label(
-                frame,
-                text=event_summary,
-                font=("Arial", 60),
-                fg=colors["Amber"][50],
-                bg=BG_COLOR,
-            )
-            summary_label.pack(pady=20)
-
             time_label = tk.Label(
                 frame,
                 text="",  # Will be updated in real-time
-                font=("Arial", 50),
-                fg=colors["Orange"][400],
+                font=("Arial", font_size2),
+                fg=TEXT_COLOR_SECONDARY,
                 bg=BG_COLOR,
             )
-            time_label.pack(pady=20)
-
-            countdown_label = tk.Label(
-                frame,
-                text="",
-                font=("Arial", 16),
-                fg="#fef3c7",  # Amber 100
-                bg=BG_COLOR,
-            )
-            countdown_label.pack(pady=10)
-
-            start_time = datetime.datetime.now(pytz.UTC)
-            end_time = start_time + datetime.timedelta(seconds=DEFAULT_HOLD_DURATION)
-
-            def update_time_remaining():
-                current_time = datetime.datetime.now(pytz.UTC)
-                time_until_event = event_start - current_time
-                minutes, seconds = divmod(int(time_until_event.total_seconds()), 60)
-                if time_until_event.total_seconds() > 0:
-                    if minutes > 0:
-                        time_remaining = f"{minutes} minutes"
-                    else:
-                        time_remaining = f"{seconds} seconds"
-                else:
-                    time_remaining = "Now"
-
-                time_label.config(text=f"Starting in {time_remaining}")
-
-                # Update countdown timer
-                time_left = int((end_time - current_time).total_seconds())
-                if time_left > 0:
-                    countdown_label.config(
-                        text=f"(Window closes in {time_left} seconds)"
-                    )
-                else:
-                    root.destroy()
-                    return
-
-                # Check if dismiss event is set
-                if dismiss_event.is_set():
-                    root.destroy()
-                    return
-
-                root.after(1000, update_time_remaining)
+            time_label.pack(pady=(20, 100))
 
             def on_dismiss():
+                logger.info(f"Dismiss button clicked for monitor {monitor}")
                 dismiss_event.set()  # Signal all windows to close
 
             dismiss_button = tk.Button(
@@ -128,7 +93,61 @@ def display_event_on_all_screens(event):
                 relief="flat",
                 padx=50,  # Increased x padding
             )
-            dismiss_button.pack(pady=40)
+            dismiss_button.pack(pady=20)
+
+            countdown_label = tk.Label(
+                frame,
+                text="",
+                font=("Arial", 12),
+                fg=TEXT_COLOR_SECONDARY,
+                bg=BG_COLOR,
+            )
+            countdown_label.pack(pady=0)
+
+            start_time = datetime.datetime.now(pytz.UTC)
+            end_time = start_time + datetime.timedelta(seconds=DEFAULT_HOLD_DURATION)
+
+            def update_time_remaining():
+                current_time = datetime.datetime.now(pytz.UTC)
+                time_until_event = event_start - current_time
+                minutes, seconds = divmod(int(time_until_event.total_seconds()), 60)
+                hours = minutes // 60
+                if time_until_event.total_seconds() > 0:
+                    if hours > 0:
+                        time_remaining = f"{hours} hours"
+                    elif minutes > 0:
+                        time_remaining = f"{minutes} minutes"
+                    else:
+                        time_remaining = f"{seconds} seconds"
+                else:
+                    time_remaining = "Now"
+
+                start_time_str = (
+                    datetime.datetime.fromisoformat(event_start_str)
+                    .strftime("%I:%M %p")
+                    .lstrip("0")
+                )
+
+                time_label.config(
+                    text=f"Starting in {time_remaining} at {start_time_str}"
+                )
+
+                # Update countdown timer
+                time_left = int((end_time - current_time).total_seconds())
+                if time_left > 0:
+                    countdown_label.config(
+                        text=f"(This alert will close in {time_left} seconds)"
+                    )
+                else:
+                    root.destroy()
+                    return
+
+                # Check if dismiss event is set
+                if dismiss_event.is_set():
+                    root.destroy()
+                    return
+
+                root.after(50, update_time_remaining)
 
             update_time_remaining()
             logger.info(f"Starting main loop for monitor: {monitor}")
