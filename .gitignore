@@ -3,3 +3,4 @@ credentials.json
 token.json
 heartbeat.json
 __pycache__
+logs

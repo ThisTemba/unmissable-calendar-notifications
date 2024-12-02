@@ -7,6 +7,7 @@ import pytz
 from screeninfo import get_monitors
 
 from colors import colors
+from logger import logger
 
 BG_COLOR = colors["Stone"][950]
 DEFAULT_HOLD_DURATION = 100  # seconds
@@ -15,12 +16,12 @@ DEFAULT_HOLD_DURATION = 100  # seconds
 def display_event_on_all_screens(event):
     """Displays the latest event on all screens with an improved UI."""
     monitors = get_monitors()
-    print(f"Detected monitors: {monitors}")  # Debug print
+    logger.info(f"Detected monitors: {monitors}")
     dismiss_event = threading.Event()  # Shared event to signal dismissal
 
     def create_window(monitor):
         try:
-            print(f"Creating window for monitor: {monitor}")  # Debug print
+            logger.info(f"Creating window for monitor: {monitor}")
             root = tk.Tk()
             root.overrideredirect(True)
             root.geometry(f"{monitor.width}x{monitor.height}+{monitor.x}+{monitor.y}")
@@ -31,7 +32,7 @@ def display_event_on_all_screens(event):
             root.lift()
             root.after(0, lambda: root.focus_force())
 
-            print(f"Window geometry set for monitor: {monitor}")  # Debug print
+            logger.info(f"Window geometry set for monitor: {monitor}")
 
             # Event details
             event_summary = event.get("summary", "No Title")
@@ -42,7 +43,7 @@ def display_event_on_all_screens(event):
             # UI setup
             frame = tk.Frame(root, bg=BG_COLOR)
             frame.pack(expand=True)
-            print(f"UI frame packed for monitor: {monitor}")  # Debug print
+            logger.debug(f"UI frame packed for monitor: {monitor}")
 
             title_label = tk.Label(
                 frame,
@@ -130,18 +131,18 @@ def display_event_on_all_screens(event):
             dismiss_button.pack(pady=40)
 
             update_time_remaining()
-            print(f"Starting main loop for monitor: {monitor}")  # Debug print
+            logger.info(f"Starting main loop for monitor: {monitor}")
 
             # Diagnostics: Print window state and attributes
             root.update()
-            print(f"Window state for monitor {monitor}: {root.state()}")
-            print(
+            logger.debug(f"Window state for monitor {monitor}: {root.state()}")
+            logger.debug(
                 f"Window is mapped (visible) for monitor {monitor}: {root.winfo_ismapped()}"
             )
 
             root.mainloop()
         except Exception as e:
-            print(f"Exception occurred for monitor {monitor}: {e}")
+            logger.error(f"Exception occurred for monitor {monitor}: {e}")
 
     # Custom thread class to catch exceptions
     class ThreadWithException(threading.Thread):
@@ -150,7 +151,7 @@ def display_event_on_all_screens(event):
                 if self._target:
                     self._target(*self._args, **self._kwargs)
             except Exception as e:
-                print(
+                logger.error(
                     f"Exception in thread {self.name} for monitor {self._args[0]}: {e}"
                 )
 
@@ -170,6 +171,7 @@ def display_event_on_all_screens(event):
         t.start()
     for t in threads:
         t.join()
+    logger.info("All threads have finished.")
 
 
 def main():
@@ -177,6 +179,7 @@ def main():
         "summary": "Test Event",
         "start": {"dateTime": "2024-08-17T12:00:00"},
     }
+    logger.info("Starting notification display.")
     display_event_on_all_screens(event)
 
 
