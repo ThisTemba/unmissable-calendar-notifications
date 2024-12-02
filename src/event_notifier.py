@@ -13,7 +13,7 @@ class EventNotifier:
         send_notification_func: Callable[[dict], None],
         heartbeat_url: str,
         poll_interval: int = 15 * 60,
-        alarm_offset: int = 3 * 60,
+        alarm_offset: int = 3 * 60 + 5,
         heartbeat_period: int = 5 * 60,
     ):
         """
