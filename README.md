@@ -3,6 +3,7 @@
 Stop being late to meetings because your calendar notifications got lost in the mud. Read your Google Calendar through Google's API and send unmissable notifications that take up your entire screen for several minutes before each event on your calendar.
 
 ## Intro
+
 ### Wait, but can't you just...
 
 Q: "Oh, but I get notifications on my phone"
@@ -26,6 +27,7 @@ The problem, fundamentally, is that there are too many settings between me and m
 ### How it Works
 
 Here's what unmissable notifications does:
+
 1. Every X minutes, check the user's calendar for the next event.
 2. Set a timer to send them a desktop notification Y minutes before the event starts.
 3. When it is time to send the notification, display it full screen on all displays.
@@ -35,6 +37,7 @@ Only works on Windows at the moment
 
 ## Notes
 
+- Most of this was written by AI, I just guided it and made modifications
 - later on can read notification preferences from google calendar, optionally
 
 ## Logging & Down Detection

@@ -8,17 +8,18 @@ from screeninfo import get_monitors
 
 from colors import colors
 from logger import logger
+from event import CalendarEvent
+
+# seconds (longer is better, good that it is dismissed by you)
+DEFAULT_HOLD_DURATION = 200
 
 BG_COLOR = colors["Stone"][950]
-DEFAULT_HOLD_DURATION = (
-    200  # seconds (longer is better, good that it is dismissed by you)
-)
 TEXT_COLOR_PRIMARY = colors["Orange"][400]
 TEXT_COLOR_SECONDARY = colors["Gray"][200]
 
 
-def display_event_on_all_screens(event):
-    """Displays the latest event on all screens with an improved UI."""
+def display_event_on_all_screens(event: CalendarEvent):
+    """Displays event on all screens"""
     monitors = get_monitors()
     logger.info(f"Detected monitors: {monitors}")
     dismiss_event = threading.Event()  # Shared event to signal dismissal
