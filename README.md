@@ -35,6 +35,12 @@ Here's what unmissable notifications does:
 
 Only works on Windows at the moment
 
+## Usage
+
+Not planning to maintain usage documentation for this. If you want to use it and can't figure out how, let me know and I'll help.
+
+Roughly, you need to connect to the Google Calendar API through the google cloud platform, and also provide a heartbeat url. Credentials go in a `credentials.json` file in the root directory. The heartbeat url goes in a `heartbeat.json` file in the root directory.
+
 ## Notes
 
 - Most of this was written by AI, I just guided it and made modifications
