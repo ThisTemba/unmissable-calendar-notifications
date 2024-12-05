@@ -41,6 +41,20 @@ Not planning to maintain usage documentation for this. If you want to use it and
 
 Roughly, you need to connect to the Google Calendar API through the google cloud platform, and also provide a heartbeat url. Credentials go in a `credentials.json` file in the root directory. The heartbeat url goes in a `heartbeat.json` file in the root directory.
 
+## Run on Startup
+
+On Windows, you can use Task Scheduler to run the script on startup. Here's roughly what you need to do:
+
+1. Open task scheduler
+2. Create a new task
+3. Set the action to run a program
+4. Set the program to absolute path to python.exe in your venv
+5. Set the arguments to the relative path of the script
+6. Set the start in to the absolute directory of the script
+7. Set other settings like when to run, when to re-run, what to do if it crashes, etc.
+
+Right now I have it set to attempt to start it every day. If it's already running, do nothing. My thought is if it crashes, it should make an attempt to start it once per day.
+
 ## Notes
 
 - Most of this was written by AI, I just guided it and made modifications
