@@ -34,13 +34,10 @@ class EventNotifier:
 
     def start(self):
         logger.info("Starting notifier.")
-        self.check_and_wait()
+        while True:
+            self.check_and_wait()
 
     def check_and_wait(self):
-        """
-        Check for the next event and wait until it is time to send a notification.
-        If it's a long time till the next event, wait for poll_interval seconds and check again.
-        """
         self.send_heartbeat()
 
         logger.info("Checking for next event.")
@@ -58,7 +55,6 @@ class EventNotifier:
                 f"Event not soon. Waiting {self.poll_interval} s before checking again."
             )
             time.sleep(self.poll_interval)
-        self.check_and_wait()
 
     def get_time_till_notify(self, next_event):
         start_time_str = next_event["start"]["dateTime"]
