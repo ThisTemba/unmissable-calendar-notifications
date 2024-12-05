@@ -1,5 +1,5 @@
 import json
-import time  # Add this import
+import time
 
 from notify import display_event_on_all_screens
 from event_notifier import EventNotifier
@@ -15,9 +15,6 @@ def main():
         get_next_event_func=get_next_event,
         send_notification_func=display_event_on_all_screens,
         heartbeat_url=heartbeat_url,
-        poll_interval=15,
-        alarm_offset=30,
-        # poll_interval=15, for testing
     )
     try:
         notifier.start()
